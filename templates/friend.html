@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Generic Api Consumer</title>
+</head>
+<body>
+
+<button id="list">List</button>
+<button id="create">добавить</button>
+<button id="update">принять</button>
+<button id="delete">отклонить</button>
+
+
+
+
+<pre id="response"></pre>
+<script>
+    const ws = new WebSocket("ws://127.0.0.1:8000/ws/friend/?token=bd4cb031cf424daec6a5fa0c39037405c54f01cb")
+
+    ws.onmessage = function (e) {
+        document.getElementById("response").textContent = JSON.stringify(JSON.parse(e.data), undefined, 2);
+        console.log(e.data)
+    }
+     ws.onerror = function (e) {
+        document.getElementById("response").textContent = JSON.stringify(JSON.parse(e.data), undefined, 2);
+        console.log(e.data)
+    }
+
+    document.querySelector('#list').onclick = function (e) {
+      ws.send(JSON.stringify({
+        action: "list",
+        request_id: new Date().getTime()
+      }))
+
+    };
+
+    document.querySelector('#create').onclick = function (e) {
+      ws.send(JSON.stringify({
+        pk: 4,
+        action: "create",
+        request_id: new Date().getTime(),
+      }))
+
+    }
+
+    document.querySelector('#update').onclick = function (e) {
+      ws.send(JSON.stringify({
+        pk: 3,
+        action: "update",
+        request_id: new Date().getTime(),
+      }))
+    }
+
+    document.querySelector('#delete').onclick = function (e) {
+      ws.send(JSON.stringify({
+          action: "delete",
+          request_id: new Date().getTime(),
+          pk: 2
+      }))
+    }
+</script>
+</body>
+</html>
