@@ -1,10 +1,11 @@
-from django.urls import path
+from django.urls import path, re_path
 
-from friend_app.consumers import UpdateFriendsConsumer, FriendsConsumer, UserConsumer
+from friend_app import consumers
+
 
 websocket_urlpatterns = [
 
-    path('ws/user_castom/', UserConsumer.as_asgi()),
-    path('ws/friend/', FriendsConsumer.as_asgi()),
-    path('ws/add_friend_y_or_n/', UpdateFriendsConsumer.as_asgi()),
+
+    re_path(r'ws/chat/(?P<room_name>\w+)/$', consumers.ChatConsumer.as_asgi()),
+
 ]

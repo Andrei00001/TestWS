@@ -1,110 +1,33 @@
+<!-- chat/templates/chat/index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Generic Api Consumer</title>
+    <meta charset="utf-8"/>
+    <title>Chat Rooms</title>
 </head>
 <body>
+    What chat room would you like to enter?<br>
+    <input id="room-name-input" type="text" size="100"><br>
+    <input id="token-name-input" type="text" size="100"><br>
+    <input id="room-name-submit" type="button" value="Enter">
 
-<button id="list">List</button>
-<button id="retrieve">Retrieve</button>
-<button id="create">Регистрация</button>
-<button id="patch">Patch</button>
-<button id="update">Update</button>
-<button id="delete">Delete</button>
-
-
-
-<form action="http://127.0.0.1:8000/api/schema/auth/token/login/" method="post">
-  <div>
-    <label for="username">What greeting do you want to say?</label>
-    <input name="username" id="username" value="admin">
-  </div>
-  <div>
-    <label for="password">Who do you want to say it to?</label>
-    <input name="password" id="password" value="admin">
-  </div>
-  <div>
-    <button>Авторизация</button>
-  </div>
-</form>
-
-<!--<form action="http://127.0.0.1:8000/api/schema/auth/token/logout/" method="post">-->
-<!--  <div>-->
-<!--    <label for="token">What greeting do you want to say?</label>-->
-<!--    <input name="token" id="token" value="Token bd4cb031cf424daec6a5fa0c39037405c54f01cb">-->
-<!--  </div>-->
-<!--  <div>-->
-<!--    <button>Разлог</button>-->
-<!--  </div>-->
-<!--</form>-->
-
-<pre id="response"></pre>
-<script>
-    const ws = new WebSocket("ws://127.0.0.1:8000/ws/user_castom/")
-
-    ws.onmessage = function (e) {
-        document.getElementById("response").textContent = JSON.stringify(JSON.parse(e.data), undefined, 2);
-        console.log(e.data)
-    }
-
-    document.querySelector('#list').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "list",
-            request_id: new Date().getTime()
-        }))
-    };
-
-    document.querySelector('#retrieve').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "retrieve",
-            request_id: new Date().getTime(),
-            pk: 2
-        }))
-    }
-
-    document.querySelector('#create').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "create",
-            request_id: new Date().getTime(),
-            data: {
-                username: "admin6",
-                password: "adminadmin",
-                email: "4qqqq@example.com"
-
+    <script>
+        document.querySelector('#room-name-input').focus();
+        document.querySelector('#room-name-input').onkeyup = function(e) {
+            if (e.keyCode === 13) {  // enter, return
+                document.querySelector('#room-name-submit').click();
             }
-        }))
-    }
+        };
 
-    document.querySelector('#patch').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "patch",
-            request_id: new Date().getTime(),
-            pk: 2,
-            data: {
-                email: "edited@example.com"
-            }
-        }))
-    }
+        document.querySelector('#room-name-submit').onclick = function(e) {
+            var roomName = document.querySelector('#room-name-input').value;
 
-    document.querySelector('#update').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "update",
-            request_id: new Date().getTime(),
-            pk: 2,
-            data: {
-                username: "user 2"
-            }
-        }))
-    }
-
-    document.querySelector('#delete').onclick = function (e) {
-        ws.send(JSON.stringify({
-            action: "delete",
-            request_id: new Date().getTime(),
-            pk: 2
-        }))
-    }
-</script>
+            window.location.pathname = '/chat/'
+                + roomName
+                + '/'
+                + '?token='
+                + document.getElementById('token-name-input').value
+        };
+    </script>
 </body>
 </html>

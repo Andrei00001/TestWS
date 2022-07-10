@@ -70,10 +70,17 @@ TEMPLATES = [
         },
     },
 ]
-
-# WSGI_APPLICATION = 'test_drf.wsgi.application'
+WSGI_APPLICATION = 'test_drf.wsgi.application'
 ASGI_APPLICATION = 'test_drf.asgi.application'
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 

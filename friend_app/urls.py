@@ -17,11 +17,12 @@ Including another URLconf
 from django.urls import path, include
 
 from .api.views.router import api_router
-from .views import index, friend
+from .views import index, login, room
 
 urlpatterns = [
     path('api/', include(api_router.urls)),
     path('', index, name="index"),
-    path('friend', friend, name="friend"),
+    path('chat/<str:room_name>/<str:token>', room, name='room'),
+    path('login', login, name="login"),
 
 ]

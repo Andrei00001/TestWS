@@ -2,6 +2,8 @@ django==4.0.6
 djangorestframework==3.13.1
 drf-spectacular==0.22.1
 djoser==2.1.0
-python-dotenv==0.20.0
+
 channels==3.0.5
 djangochannelsrestframework==1.0.0
+channels-redis==3.4.0
+
