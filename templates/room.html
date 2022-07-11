@@ -50,6 +50,7 @@
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
+                "type": "message",
                 'message': message
             }));
             messageInputDom.value = '';
@@ -62,28 +63,31 @@
         };
 
         document.querySelector('#friend-username-submit').onclick = function(e) {
-            const friendInputDom = document.querySelector('#friend-username-input');
-            const friend = friendInputDom.value;
+            const messageInputDom = document.querySelector('#friend-username-input');
+            const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
-                'friend': friend
+                "type": "add_friends",
+                'message': message
             }));
-            friendInputDom.value = '';
+            messageInputDom.value = '';
         };
        document.querySelector('#add-username-submit').onclick = function (e) {
-           const usernameInputDom = document.querySelector('#friend-username-input');
-           const user = usernameInputDom.value;
+           const messageInputDom = document.querySelector('#friend-username-input');
+           const message = messageInputDom.value;
            chatSocket.send(JSON.stringify({
-               "username": user,
+               "type": "add_friends",
+               "message": message,
            }));
-           usernameInputDom.value = '';
+          messageInputDom.value = '';
        };
        document.querySelector('#delete-username-submit').onclick = function (e) {
-           const usernameInputDom = document.querySelector('#friend-username-input');
-           const user_del = usernameInputDom.value;
+           const messageInputDom = document.querySelector('#friend-username-input');
+           const message =messageInputDom.value;
            chatSocket.send(JSON.stringify({
-               "user_del": user_del,
+               "type": "del_friends",
+               "message": message,
            }));
-           usernameInputDom.value = '';
+           messageInputDom.value = '';
        };
     </script>
 </body>
