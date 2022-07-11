@@ -45,26 +45,66 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         # Receive message from WebSocket
 
     async def receive(self, *args, **kwargs):
-        t = json.loads(kwargs["text_data"])
+        data = json.loads(kwargs["text_data"])
 
         type_func = {
-            "message": self.print_message_fo_group_room(t),
+            "message": self.print_message_fo_group_room(data),
+            "friend": self.print_message_fo_user_room(data),
         }
 
-        await type_func[t["type"]]
+        await type_func[data["type"]]
+
+    async def print_message_fo_user_room(self, event):
+        friend = event["message"]
+        action = event["action"]
+
+        valid_friend_obj = await self.valid_user(friend)
+
+        if valid_friend_obj:
+            type_func = {
+                "friendship_created": self.create_friend(valid_friend_obj),
+                "add_friends": self.update_friend(valid_friend_obj),
+                "del_friends": self.delete_friend(valid_friend_obj),
+            }
+            await type_func[action]
+
+            await self.channel_layer.group_send(
+                f"chat_{friend}",
+                {
+                    'type': action,
+                    'message': friend,
+                    'user': self.user.username,
+                }
+            )
+        else:
+            await self.send_json(self.valid_u)
+
+    async def friendship_created(self, event):
+        await self.send_json({
+            'message': f'User {event["user"]} add in friend {event["message"]}',
+        })
+
+    async def add_friends(self, event):
+        await self.send_json({
+            "message": f"{event['user']} add confirmation {event['message']}"
+        })
+
+    async def del_friends(self, event):
+        await self.send_json({
+            "message": f"{event['user']} delete confirmation {event['message']}"
+        })
 
     async def print_message_fo_group_room(self, event):
         message = event["message"]
         await self.add_messages_to_room(message)
         await self.channel_layer.group_send(
-                self.room_group_name,
-                {
-                    'type': 'chat_message',
-                    'message': message,
-                    'user': self.user.username,
-                }
-            )
-
+            self.room_group_name,
+            {
+                'type': 'chat_message',
+                'message': message,
+                'user': self.user.username,
+            }
+        )
 
     async def chat_message(self, event):
         message = event['message']
@@ -79,56 +119,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         user: User = self.user
         room: Room = Room.objects.get(name=self.room_name)
         Message.objects.create(room=room, text=messages, user=user)
-        # if 'message' in text_data_json:
-        #     message = text_data_json['message']
-        #
-        #     await self.channel_layer.group_send(
-        #         self.room_group_name,
-        #         {
-        #             'type': 'chat_message',
-        #             'message': message,
-        #             'user': self.user.username,
-        #         }
-        #     )
-
-        # elif 'friend' in text_data_json:
-        #     friend = text_data_json['friend']
-        #
-        #     await self.channel_layer.group_send(
-        #         f"chat_{friend}",
-        #         {
-        #             'type': 'friendship_created',
-        #             'friend': friend,
-        #             'user': self.user.username,
-        #         }
-        #     )
-        #
-        # elif 'username' in text_data_json:
-        #     username = text_data_json['username']
-        #     if await self.valid_user(username):
-        #         await self.channel_layer.group_send(
-        #             f"chat_{username}",
-        #             {
-        #                 'type': 'confirmation_user',
-        #                 'username': username,
-        #                 'user': self.user.username,
-        #             }
-        #         )
-        #     else:
-        #         await self.send_json(self.valid_u)
-        # elif 'user_del' in text_data_json:
-        #     user_del = text_data_json['user_del']
-        #     if await self.valid_user(user_del):
-        #         await self.channel_layer.group_send(
-        #             f"chat_{user_del}",
-        #             {
-        #                 'type': 'del_user_friend',
-        #                 'username': user_del,
-        #                 'user': self.user.username,
-        #             }
-        #         )
-        #     else:
-        #         await self.send_json(self.valid_u)
 
         # Send message to room group
 
@@ -141,51 +131,19 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         except BaseException:
             return None
 
-    async def friendship_created(self, event):
-        friend = event["friend"]
-        friend = await self.valid_user(friend)
-        user = event["user"]
-        if friend:
-            await self.add_friend(friend)
-            await self.send_json({
-                'message': f'User {user} add in friend {friend.username}',
-            })
-        else:
-            await self.send_json(self.valid_u)
-
-
-
     @database_sync_to_async
-    def add_friend(self, friend):
+    def create_friend(self, friend):
         user: User = self.user
-        return Friends.objects.create(user=friend, friend=user)
+        return Friends.objects.create(user=user, friend=friend)
         # Send a message to WebSocket
 
-    async def confirmation_user(self, event):
-        username = event["username"]
-        user = event["user"]
-        await self.update_friend(username)
-        await self.send_json({
-            "message": f"{user} add confirmation {username}"
-        })
-
-    async def del_user_friend(self, event, user):
-        user_del = event["user_del"]
-        user = event["user"]
-        await self.delete_friend(user_del)
-        await self.send_json({
-            "message": f"{user} delete confirmation {user_del}"
-        })
+    @database_sync_to_async
+    def update_friend(self, friend):
+        return Friends.objects.filter(user=friend, friend=self.user).update(confirmation=True)
 
     @database_sync_to_async
-    def update_friend(self, username):
-        return Friends.objects.filter(user__username=username).update(confirmation=True)
-
-    @database_sync_to_async
-    def delete_friend(self, username):
-        return Friends.objects.filter(user__username=username).delete()
-
-
+    def delete_friend(self, friend):
+        return Friends.objects.filter(user=friend, friend=self.user).delete()
 
     @database_sync_to_async
     def add_user_to_room(self):
@@ -196,8 +154,6 @@ class ChatConsumer(AsyncJsonWebsocketConsumer):
         except BaseException:
             Room.objects.create(name=self.room_name, host=user)
             user.current_rooms.add(Room.objects.get(name=self.room_name))
-
-
 
     @database_sync_to_async
     def story_messages_to_room(self):
